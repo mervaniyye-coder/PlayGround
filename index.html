@@ -11,6 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="journey.css">
 </head>
 <body>
   <main class="shell">
@@ -40,7 +41,7 @@
           <div class="eyebrow"><span></span> A choice-driven fantasy story</div>
           <h1>The island<br>that <em>chose you.</em></h1>
           <p class="welcome-deck">You came to Geyropoa alone. Its devilish residents have been waiting for you—but a heart can’t be claimed by a spell.</p>
-          <div class="welcome-meta"><span>✦ 3 possible companions</span><span>◷ 10–15 minutes</span><span>♡ Multiple endings</span></div>
+          <div class="welcome-meta"><span>✦ 3 possible companions</span><span>◷ 12 levels · at least 1 hour per ending</span><span>♡ Multiple endings</span></div>
           <button class="primary-button" id="beginButton">Begin your story <span>→</span></button>
           <button class="continue-button hidden" id="continueButton">Continue saved story <span>↗</span></button>
           <p class="tiny-note">All characters are adults (18+). A gentle, non-explicit romance.</p>
@@ -59,6 +60,7 @@
             <div class="scene-heading"><div class="scene-eyebrow" id="sceneEyebrow">GEYROPOA · NIGHT</div><h2 id="sceneTitle"></h2></div>
             <div class="narrative-copy" id="sceneText"></div>
             <div class="quote-line hidden" id="sceneQuote"></div>
+            <div class="level-gate hidden" id="levelGate" role="status" aria-live="polite"></div>
             <div class="choice-heading" id="choiceHeading">WHAT WILL YOU DO?</div>
             <div class="choices" id="choices"></div>
             <div class="ending-actions hidden" id="endingActions"><button class="primary-button" id="playAgainButton">Play again <span>↺</span></button><button class="text-button" id="titleButton">Back to title</button></div>
@@ -70,6 +72,7 @@
     <footer class="page-footer"><span>THE HEART-TIDE</span><span>AN INTERACTIVE STORY <i>·</i> MADE FOR THE MOONLIT HOURS</span></footer>
   </main>
   <script src="i18n.js"></script>
+  <script src="journey.js"></script>
   <script src="game.js"></script>
 </body>
 </html>

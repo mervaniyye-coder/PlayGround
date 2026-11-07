@@ -17,7 +17,11 @@ const cast = {
     friend: 'You help Mara pack her seeds for the journey ahead. She will stay and tend the garden while you go, and you promise to return. You part as friends, with the island’s wildflowers waving you on.' }
 };
 
-const state = { screen: 'title', node: 'arrival', route: null, bond: 0, chapter: 1 };
+const state = { screen: 'title', node: 'arrival', route: null, bond: 0, chapter: 1, journeyIndex: 0, startedAt: null };
+const LEVEL_COUNT = 12;
+const MIN_LEVEL_MS = 5 * 60 * 1000;
+const MIN_ENDING_MS = 60 * 60 * 1000;
+let gateLocked = false;
 const STORAGE_KEY = 'geyropoa-heart-tide-save-v1';
 const LANGUAGE_KEY = 'geyropoa-language';
 let language = localStorage.getItem(LANGUAGE_KEY) === 'tr' ? 'tr' : 'en';
@@ -79,12 +83,15 @@ function readSave() {
   try { const data = JSON.parse(localStorage.getItem(STORAGE_KEY)); return data && data.node ? data : null; } catch (_) { return null; }
 }
 function begin() {
-  Object.assign(state, { screen: 'story', node: 'arrival', route: null, bond: 0, chapter: 1 });
+  Object.assign(state, { screen: 'story', node: 'arrival', route: null, bond: 0, chapter: 1, journeyIndex: 0, startedAt: Date.now() });
+  delete state.endingType;
   render();
 }
 function continueStory() {
   const saved = readSave();
   if (saved) Object.assign(state, saved);
+  if (!state.startedAt) state.startedAt = Date.now() - Math.max(0, (state.chapter - 1) * MIN_LEVEL_MS);
+  if (!Number.isInteger(state.journeyIndex)) state.journeyIndex = 0;
   state.screen = 'story';
   render();
 }
@@ -105,31 +112,56 @@ function makeChoice(label, detail, action, glyph = '✦') {
   button.addEventListener('click', action);
   return button;
 }
+function sceneText(value) {
+  return value.replaceAll('{name}', state.route ? activeCast()[state.route].name : '');
+}
+function updateGate(allowRender = false) {
+  if (!$('storyScreen') || $('storyScreen').classList.contains('hidden')) return;
+  const levelTarget = Math.max(0, (state.chapter - 1) * MIN_LEVEL_MS);
+  const target = state.node === 'ending' ? Math.max(MIN_ENDING_MS, levelTarget) : levelTarget;
+  const remaining = Math.max(0, target - (Date.now() - (state.startedAt || Date.now())));
+  const wasLocked = gateLocked;
+  gateLocked = remaining > 0;
+  $('levelGate').classList.toggle('hidden', !gateLocked);
+  $('choices').classList.toggle('hidden', gateLocked || state.node === 'ending');
+  $('choiceHeading').classList.toggle('hidden', gateLocked || state.node === 'ending');
+  $('endingActions').classList.toggle('hidden', gateLocked || state.node !== 'ending');
+  if (gateLocked) {
+    const minutes = Math.floor(remaining / 60000);
+    const seconds = Math.floor((remaining % 60000) / 1000).toString().padStart(2, '0');
+    const endingGate = state.node === 'ending';
+    const title = tr(endingGate ? 'endingGateTitle' : 'gateTitle');
+    const body = tr(endingGate ? 'endingGateBody' : 'gateBody');
+    $('levelGate').innerHTML = `<strong>${title}</strong>${body} <span class="gate-time">${minutes}:${seconds}</span>`;
+  }
+  if (allowRender && wasLocked && !gateLocked) render();
+}
 function displayScene({ eyebrow = tr('night'), title, text, quote = '', choices = [], ending = false }) {
   openStory();
   $('sceneEyebrow').textContent = eyebrow;
-  $('sceneTitle').textContent = title;
-  $('sceneText').textContent = text;
-  $('sceneQuote').textContent = quote;
+  $('sceneTitle').textContent = sceneText(title);
+  $('sceneText').textContent = sceneText(text);
+  $('sceneQuote').textContent = sceneText(quote);
   $('sceneQuote').classList.toggle('hidden', !quote);
   $('choiceHeading').classList.toggle('hidden', ending);
   $('choices').classList.toggle('hidden', ending);
   $('endingActions').classList.toggle('hidden', !ending);
   $('choices').replaceChildren();
   choices.forEach((choice) => $('choices').appendChild(makeChoice(...choice)));
-  $('chapterKicker').textContent = ending ? tr('endingKicker') : `${language === 'tr' ? 'BÖLÜM' : 'CHAPTER'} 0${state.chapter}`;
+  $('chapterKicker').textContent = ending ? tr('endingKicker') : `${tr('levelPrefix')} ${String(state.chapter).padStart(2, '0')} / ${LEVEL_COUNT}`;
   const person = state.route ? activeCast()[state.route] : null;
   const routeChapter = person && language === 'tr'
     ? { lyra: "LYRA'NIN HİKÂYESİ", vesper: "VESPER'İN HİKÂYESİ", mara: "MARA'NIN HİKÂYESİ" }[state.route]
     : person ? `${person.name.toUpperCase()}${tr('storySuffix')}` : '';
   $('chapterSmall').textContent = ending ? tr('endingSub') : (state.node === 'arrival' ? tr('chapterName') : person ? routeChapter : tr('chapterTide'));
-  $('progressFill').style.width = ending ? '100%' : state.node === 'arrival' ? '16%' : state.node === 'truth' ? '66%' : state.node === 'commit' ? '78%' : '48%';
+  $('progressFill').style.width = `${ending ? 100 : Math.round((state.chapter / LEVEL_COUNT) * 100)}%`;
   $('footerHint').textContent = ending ? tr('thanks') : tr('storyHint');
   renderCast();
   $('narrative-panel')?.classList.remove('fade-in');
   document.querySelector('.narrative-panel').classList.remove('fade-in');
   void document.querySelector('.narrative-panel').offsetWidth;
   document.querySelector('.narrative-panel').classList.add('fade-in');
+  updateGate();
   save();
 }
 function enterRoute(route) {
@@ -142,7 +174,7 @@ function ending(type) {
   state.node = 'ending';
   state.endingType = type;
   state.screen = 'ending';
-  state.chapter = 4;
+  state.chapter = 12;
   const story = t().endings;
   if (type === 'truth') {
     displayScene({ eyebrow: story.truth.eyebrow, title: story.truth.title, text: story.truth.text, ending: true });
@@ -151,10 +183,11 @@ function ending(type) {
   const person = activeCast()[state.route];
   let title, text;
   if (type === 'romance') {
-    title = `${person.name}${state.bond ? story.romanceTitleBond : story.romanceTitleNoBond}`;
+    const titlePart = state.bond ? story.romanceTitleBond : story.romanceTitleNoBond;
+    title = language === 'tr' ? `${person.name}${titlePart}` : `${titlePart} ${person.name}`;
     text = person.romance[state.bond ? 0 : 1];
   } else if (type === 'friend') {
-    title = `${person.name}${story.friendTitle}`;
+    title = language === 'tr' ? `${person.name}${story.friendTitle}` : `${story.friendTitle} ${person.name}`;
     text = person.friend;
   } else {
     title = story.soloTitle;
@@ -168,12 +201,21 @@ function render() {
   if (state.node === 'arrival') {
     state.screen = 'story';
     const scene = data.arrival;
-    displayScene({ title: scene.title, text: scene.text, quote: scene.quote, choices: scene.choices.map(([label, detail], index) => [label, detail, () => index < 3 ? enterRoute(['lyra', 'vesper', 'mara'][index]) : (state.node = 'truth', state.chapter = 2, render())]) });
+    displayScene({ title: scene.title, text: scene.text, quote: scene.quote, choices: scene.choices.map(([label, detail], index) => [label, detail, () => index < 3 ? enterRoute(['lyra', 'vesper', 'mara'][index]) : (state.node = 'truth', state.chapter = 11, render())]) });
   } else if (state.node === 'route' && state.route) {
     const person = activeCast()[state.route];
     const name = person.name.toLocaleUpperCase(language === 'tr' ? 'tr-TR' : 'en-US');
     const role = person.role.toLocaleUpperCase(language === 'tr' ? 'tr-TR' : 'en-US');
-    displayScene({ eyebrow: language === 'tr' ? `${name} · ${role}` : `${name} · THE ${role}`, title: person.title, text: person.text, quote: person.quote, choices: person.choices.map(([label, detail, points]) => [label, detail, () => { state.bond = points; state.node = 'commit'; state.chapter = 3; render(); }]) });
+    displayScene({ eyebrow: language === 'tr' ? `${name} · ${role}` : `${name} · THE ${role}`, title: person.title, text: person.text, quote: person.quote, choices: person.choices.map(([label, detail, points]) => [label, detail, () => { state.bond += points; state.node = 'journey'; state.journeyIndex = 0; state.chapter = 3; render(); }]) });
+  } else if (state.node === 'journey' && state.route) {
+    const scene = journeyScenes[language][state.journeyIndex];
+    displayScene({ eyebrow: `${tr('night')} · ${activeCast()[state.route].name.toLocaleUpperCase(language === 'tr' ? 'tr-TR' : 'en-US')}`, title: scene.title, text: scene.text, quote: scene.quote, choices: scene.choices.map(([label, detail, points]) => [label, detail, () => {
+      state.bond += points;
+      state.journeyIndex += 1;
+      if (state.journeyIndex >= journeyScenes[language].length) { state.node = 'commit'; state.chapter = 11; }
+      else state.chapter += 1;
+      render();
+    }]) });
   } else if (state.node === 'commit' && state.route) {
     const person = activeCast()[state.route];
     const commitment = data.commitment;
@@ -217,3 +259,4 @@ $('soundButton').addEventListener('click', async () => {
 });
 
 localizeShell();
+window.setInterval(() => updateGate(true), 1000);
