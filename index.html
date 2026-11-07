@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101522">
+  <meta name="description" content="A choice-driven romantic fantasy visual novel set on the mysterious island of Geyropoa.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9C%A6%3C/text%3E%3C/svg%3E">
+  <title>Geyropoa — The Heart-Tide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <a class="wordmark" href="#" aria-label="Geyropoa home" id="homeLink"><span class="brand-mark">✦</span> GEYROPOA</a>
+      <div class="top-actions">
+        <span class="save-status" id="saveStatus" aria-live="polite">A story about choosing</span>
+        <button class="icon-button" id="soundButton" aria-label="Toggle ambient sound" title="Toggle ambient sound">♫ <span>Sound off</span></button>
+      </div>
+    </header>
+
+    <section class="game-frame" id="gameFrame">
+      <div class="scene-art" id="sceneArt" aria-hidden="true">
+        <div class="sky-glow"></div><div class="moon"></div>
+        <div class="mountain mountain-back"></div><div class="mountain mountain-front"></div>
+        <div class="water"></div><div class="reflection"></div><div class="shore"></div>
+        <div class="art-label"><span class="art-dot"></span> THE OUTER REACHES · 02:17 AM</div>
+      </div>
+
+      <div class="welcome-screen" id="welcomeScreen">
+        <div class="welcome-copy">
+          <div class="eyebrow"><span></span> A choice-driven fantasy story</div>
+          <h1>The island<br>that <em>chose you.</em></h1>
+          <p class="welcome-deck">You came to Geyropoa alone. Its devilish residents have been waiting for you—but a heart can’t be claimed by a spell.</p>
+          <div class="welcome-meta"><span>✦ 3 possible companions</span><span>◷ 10–15 minutes</span><span>♡ Multiple endings</span></div>
+          <button class="primary-button" id="beginButton">Begin your story <span>→</span></button>
+          <button class="continue-button hidden" id="continueButton">Continue saved story <span>↗</span></button>
+          <p class="tiny-note">All characters are adults (18+). A gentle, non-explicit romance.</p>
+        </div>
+        <div class="welcome-orbit" aria-hidden="true"><div class="orbit-ring ring-one"></div><div class="orbit-ring ring-two"></div><div class="orbit-star">✦</div><div class="orbit-caption">NOBODY OWNS<br>A HEART</div></div>
+      </div>
+
+      <section class="story-screen hidden" id="storyScreen" aria-live="polite">
+        <div class="story-layout">
+          <aside class="sidebar">
+            <div class="chapter-card"><div class="chapter-kicker" id="chapterKicker">CHAPTER 01</div><div class="chapter-progress"><span id="progressFill"></span></div><div class="chapter-small" id="chapterSmall">THE STRANGE SHORE</div></div>
+            <div class="cast-card"><div class="cast-title">THE ISLANDERS <span>18+</span></div><div class="cast-list" id="castList"></div></div>
+            <button class="text-button" id="restartButton">↺ Start over</button>
+          </aside>
+          <article class="narrative-panel">
+            <div class="scene-heading"><div class="scene-eyebrow" id="sceneEyebrow">GEYROPOA · NIGHT</div><h2 id="sceneTitle"></h2></div>
+            <div class="narrative-copy" id="sceneText"></div>
+            <div class="quote-line hidden" id="sceneQuote"></div>
+            <div class="choice-heading" id="choiceHeading">WHAT WILL YOU DO?</div>
+            <div class="choices" id="choices"></div>
+            <div class="ending-actions hidden" id="endingActions"><button class="primary-button" id="playAgainButton">Play again <span>↺</span></button><button class="text-button" id="titleButton">Back to title</button></div>
+            <div class="story-footer"><span id="footerHint">Your choices shape the story.</span><span>GEYROPOA <b>✦</b></span></div>
+          </article>
+        </div>
+      </section>
+    </section>
+    <footer class="page-footer"><span>THE HEART-TIDE</span><span>AN INTERACTIVE STORY <i>·</i> MADE FOR THE MOONLIT HOURS</span></footer>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
